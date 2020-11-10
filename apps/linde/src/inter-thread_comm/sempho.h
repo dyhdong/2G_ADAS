@@ -71,4 +71,7 @@ bool semGiveWriteOk();
 bool semTakeWriteOk(uint32_t ms);
 
 
+bool semGiveUart6();
+bool semTakeUart6(uint32_t ms);
+
 #endif

@@ -50,6 +50,8 @@ enum SERVER_CMDID
     SERVER_UPLOAD_GPS_REQ = 0x105,
     SERVER_UPLOAD_ALERT_REQ = 0x107,
 
+    
+
     SERVER_MSE_UPLOAD_REQ = 0x123,
     DEV_UPLOAD_CRASH      = 0x125,
 
@@ -1062,7 +1064,7 @@ bool serverSendGpsInfo(uploadGPS_t* ps)
 
 bool serverSendAlertInfo(uploadAlert_t *ps)
 {
-    return serverSendBytes(UPLOAD_ONCE, SERVER_UPLOAD_ALERT_REQ, 3, ps, sizeof(uploadAlert_t));
+    return serverSendBytes(UPLOAD_ONCE, SERVER_UPLOAD_ALERT_REQ, 1, ps, sizeof(uploadAlert_t));
 }
 
 bool serverSendLoseHBInfo(uploadLoseHb_t *ps)

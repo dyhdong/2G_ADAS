@@ -20,7 +20,7 @@ static struct k_sem    g_sem_pressureStart;
 static struct k_sem    g_sem_pressureStop;
 static struct k_sem    g_sem_writeFileOk;
 
-
+static struct k_sem    g_sem_uart6;
 
 bool semInit()
 {
@@ -42,6 +42,7 @@ bool semInit()
     k_sem_init(&g_sem_pressureStart, 0, 1);
     k_sem_init(&g_sem_pressureStop, 0, 1);
     k_sem_init(&g_sem_writeFileOk, 0, 1);
+    k_sem_init(&g_sem_uart6, 0, 1);
 
     return true;
 }
@@ -317,6 +318,21 @@ bool semGiveWriteOk()
 bool semTakeWriteOk(uint32_t ms)
 {
     if(!k_sem_take(&g_sem_pressureStop, ms))
+    {
+        return true;
+    }
+    return false;
+}
+
+bool semGiveUart6()
+{
+    k_sem_give(&g_sem_uart6);
+    return true;
+}
+
+bool semTakeUart6(uint32_t ms)
+{
+    if(!k_sem_take(&g_sem_uart6, ms))
     {
         return true;
     }

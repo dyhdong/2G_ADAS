@@ -5,7 +5,7 @@
 #include <gpio.h>
 #include <uart.h>
 #include <misc/util.h>
-
+#include "sempho.h"
 #include "hw_uart.h"
 #include "my_misc.h"
 
@@ -57,7 +57,7 @@ static int uart_send(struct device *uart_dev, const char *buf, int len)
 			return -1;
 		}
 	}
-
+	
 	return i;
 }
 
@@ -117,7 +117,9 @@ int hw_uart_send_bytes(enum hw_uart_num num, const uint8_t *data, int len)
 	switch(num){
   case HW_UART6:
 	  if(uart_6_dev){
+			semTakeUart6(400);
 			write_len = uart_send(uart_6_dev, data, len);
+			semGiveUart6();
 		}
 		break;
 	default:

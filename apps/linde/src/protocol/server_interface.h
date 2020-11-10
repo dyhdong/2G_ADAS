@@ -394,7 +394,7 @@ typedef struct
 
 typedef struct
 {
-    uint32_t start_ts;
+    uint32_t start_ts;//alert sha
     uint32_t end_ts;
     uint8_t distance;
     uint8_t limit;

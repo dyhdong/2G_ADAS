@@ -7,11 +7,13 @@
 #include "proto_adapt.h"
 #include "hw_uart.h"
 #include "rtc.h"
+
 #include "rfid_thread.h"
 #include "thread_gps.h"
 #include "message_center_thread.h"
 #include "server_interface.h"
 #include "config.h"
+#include "vehicle_speed_limit.h"
 
 #define THREAD_STB_STACK_SIZE 2048
 #define FORWARD 0x01
@@ -38,7 +40,8 @@ k_tid_t g_stb_thread_id = 0;
 static int8_t stage_buff[4] = {0};
 static int8_t heartbeat_buff[4] = {0};
 uint8_t RxBuff[32] = {0};
-static uint32_t timestamp_buff[4] = {0};  
+static uint32_t timestamp_buff[4] = {0}; 
+static uint8_t tmp_buff[20] = {0}; 
 //static uint8_t loseHb_buff[4] = {0};
 
 uint8_t stage = 0;
@@ -96,13 +99,14 @@ static void threadSTBEntry()
     int tmp3 = 0;
     int tmp4 = 0;
     int i_loop = 0;
+    int i =0;
    
     ret = hw_uart_init();
     if(0 != ret)
     {
         print_log("Uart init failed.\n");
     }
-
+    vehclSpeedLimitSetup();
     while(1)
     {        
         imei = gSysconfig.devId;
@@ -151,6 +155,7 @@ static void threadSTBEntry()
             hw_uart_send_bytes(HW_UART6, timestamp_buff, sizeof(timestamp_buff));
             memset(RxBuff, '0', sizeof(RxBuff));
             print_log("********timestamp sended to LAB********\n");
+            k_sleep(100);
         }
         else if(RxBuff[0] == 0x66)
         {
@@ -209,18 +214,79 @@ static void threadSTBEntry()
             print_log("alert.IMEI is %s\n", alert.IMEI);  
             memset(RxBuff, '0', sizeof(RxBuff));
  
-
+            //char uploadbuf[200];
+            //sprintf(uploadbuf,"%d:%d:%d:%d:%d:%d:%d:%d:%s\n",alert.start_ts,alert.end_ts,alert.distance,alert.limit,alert.alert,alert.longitude,alert.latitude,alert.RFID,alert.IMEI);
+            //serverSendLog(uploadbuf);
             alert_ret = serverSendAlertInfo(&alert);
             if(false == alert_ret)
             {
-                print_log("********send alert info failed********\n");
+                serverSendLog("********send alert info failed********\n");
+                print_log("**************smartlink send alert info to server failed****************\n");  
             }
             else
             {
-                print_log("********send alert info succes********\n");
+                serverSendLog("********send alert info succes********\n");
+                print_log("**************smartlink send alert info to server success****************\n"); 
             }
+            k_sleep(100);
+            
+        }
+        else if(RxBuff[0] == 0xEE){
+            if(RxBuff[1] == 0x01)
+            {
+                for(i = 0;i < 10;i++)
+                {
+                    print_log("********speed limit open********\n");
+                    print_log("********speed limit open********\n");
+                }
+                
+                memset(tmp_buff,0, sizeof(tmp_buff));
+                tmp_buff[0] = 0xEF;
+                tmp_buff[1] = 0x01;
+                tmp_buff[2] = 0x0D;
+                //print_log("%d\n", timestamp_buff[1]);
+                hw_uart_send_bytes(HW_UART6, tmp_buff, 3);
+                vehclSpeedLimitOpen();
+            }
+            else if(RxBuff[1] == 0x02)
+            {
+                for(i = 0;i < 10;i++)
+                {
+                    print_log("********speed limit CLOSE********\n");
+                    print_log("********speed limit CLOSE********\n");
+                }
+                print_log("********speed limit close********\n");
+                memset(tmp_buff,0, sizeof(tmp_buff));
+                tmp_buff[0] = 0xEF;
+                tmp_buff[1] = 0x02;
+                tmp_buff[2] = 0x0D;
+                //print_log("%d\n", timestamp_buff[1]);
+                hw_uart_send_bytes(HW_UART6, tmp_buff, 3);
+                vehclSpeedLimitClose();
+            }
+            memset(RxBuff, 0, sizeof(RxBuff));
+            k_sleep(100);
         }
 
+        else if((RxBuff[0] == 0xE0) && (RxBuff[1] == 0x01)){
+            memset(tmp_buff,0, sizeof(tmp_buff));
+            tmp_buff[0] = 0xE0;
+            tmp_buff[1] = 0x02;
+            tmp_buff[17] = 0x0D;
+            for( i = 0;i < 15;i++)
+            {
+                tmp_buff[2+i] = imei[i];
+            }
+            print_log("return imei : ");
+            for(i = 0;i<18;i++ )
+            {
+                print_log("  %02x",tmp_buff[i]);
+            }
+            print_log("\n");
+            hw_uart_send_bytes(HW_UART6, tmp_buff, 18);
+            memset(RxBuff,0, sizeof(RxBuff));
+        }
+        
         int current_time = k_uptime_get();
         if((current_time - last_time >= HEART_BEAT_INTERVEL) || last_time == 0)  //send heartbeat every 30s, get response from LAB, tell server if there is no response for 4 times
         {
@@ -326,6 +392,6 @@ static void threadSTBEntry()
         }
             
         
-    k_sleep(20);
+    k_sleep(100);
     }
 }

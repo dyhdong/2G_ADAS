@@ -27,7 +27,8 @@ bool vehclCtrlrelaySetup()
 }
 bool vehclOpen()
 {
-    if(gpio_pin_write(g_vehclCtrlRelay, GOIO_VEHCL_CTRL_DALAY_PIN, VEHICLE_UNLOCK_VAL))
+    //if(gpio_pin_write(g_vehclCtrlRelay, GOIO_VEHCL_CTRL_DALAY_PIN, VEHICLE_UNLOCK_VAL))
+    if(gpio_pin_write(g_vehclCtrlRelay, GOIO_VEHCL_CTRL_DALAY_PIN, VEHICLE_LOCK_VAL))
     {
         return false;
     }
@@ -35,7 +36,8 @@ bool vehclOpen()
 }
 bool vehclLock()
 {
-    if(gpio_pin_write(g_vehclCtrlRelay, GOIO_VEHCL_CTRL_DALAY_PIN, VEHICLE_LOCK_VAL))
+    //if(gpio_pin_write(g_vehclCtrlRelay, GOIO_VEHCL_CTRL_DALAY_PIN, VEHICLE_LOCK_VAL))
+    if(gpio_pin_write(g_vehclCtrlRelay, GOIO_VEHCL_CTRL_DALAY_PIN, VEHICLE_UNLOCK_VAL))
     {
         return false;
     }
